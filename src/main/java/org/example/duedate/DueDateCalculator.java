@@ -19,7 +19,7 @@ public class DueDateCalculator {
 
 	LocalDateTime dueDate = submitDate;
 	for (int i = 0; i < turnAround.toHours(); ++i) {
-	    dueDate = nextWorkHour(submitDate);
+	    dueDate = nextWorkHour(dueDate);
 	}
 
 	return dueDate;

@@ -81,12 +81,11 @@ public class DueDateCalculatorTest {
     public void testCaculateDueDateMoreDaysOverflow() {
 	Calendar submitCalendar = new GregorianCalendar(2016, 8, 9, 14, 0); // 2016-09-09 2PM
 
-	int turnAroundHours = 24 * 7 + 4; //7 days, 4 hours
+	int turnAroundHours = 8 * 5 + 4; //5 workdays, 4 hours
 
 	Date dueDate = callAndConvertToUtilDate(submitCalendar, turnAroundHours);
 
 	Calendar calendar = new GregorianCalendar(2016, 8, 19, 10, 0); // 2016-09-19 10AM
-	calendar.setTime(dueDate);
 	assertEquals("2016-09-09 2PM + 7 days 4 hours = 2016-09-19 10AM", calendar.getTime(), dueDate);
     }
 
