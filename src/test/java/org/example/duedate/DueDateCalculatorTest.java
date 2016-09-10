@@ -1,5 +1,8 @@
 package org.example.duedate;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -27,7 +30,7 @@ public class DueDateCalculatorTest {
 
 	    int turnAroundHours = random.nextInt(MAX_RANDOM_TURN_AROUND_HOURS) + 1; //positive
 
-	    Date dueDate = dueDateCalculator.calculateDueDate(submitCalendar.getTime(), turnAroundHours);
+	    Date dueDate = callAndConvertToUtilDate(submitCalendar, turnAroundHours);
 
 	    Calendar calendar = Calendar.getInstance();
 	    calendar.setTime(dueDate);
@@ -38,13 +41,19 @@ public class DueDateCalculatorTest {
 	}
     }
 
+    private Date callAndConvertToUtilDate(Calendar submitCalendar, int turnAroundHours) {
+	return Date.from(dueDateCalculator.calculateDueDate(LocalDateTime.ofInstant(
+		submitCalendar.toInstant(), ZoneId.systemDefault()), Duration.ofHours(turnAroundHours)).atZone(
+		ZoneId.systemDefault()).toInstant());
+    }
+
     @Test
     public void testCaculateDueDate1DayOverflow() {
 	Calendar submitCalendar = new GregorianCalendar(2016, 8, 7, 14, 0); // 2016-09-07 2PM
 
 	int turnAroundHours = 6;
 
-	Date dueDate = dueDateCalculator.calculateDueDate(submitCalendar.getTime(), turnAroundHours);
+	Date dueDate = callAndConvertToUtilDate(submitCalendar, turnAroundHours);
 
 	Calendar calendar = new GregorianCalendar(2016, 8, 8, 12, 0); // 2016-09-07 12PM
 	calendar.setTime(dueDate);
@@ -58,10 +67,9 @@ public class DueDateCalculatorTest {
 	submitCalendar.set(Calendar.HOUR_OF_DAY, 16);
 	submitCalendar.set(Calendar.MINUTE, 1);
 
-	Date startDate = submitCalendar.getTime();
 	int turnAroundHours = 1;
 
-	Date dueDate = dueDateCalculator.calculateDueDate(startDate, turnAroundHours);
+	Date dueDate = callAndConvertToUtilDate(submitCalendar, turnAroundHours);
 
 	Calendar calendar = Calendar.getInstance();
 	calendar.setTime(dueDate);
@@ -75,7 +83,7 @@ public class DueDateCalculatorTest {
 
 	int turnAroundHours = 24 * 7 + 4; //7 days, 4 hours
 
-	Date dueDate = dueDateCalculator.calculateDueDate(submitCalendar.getTime(), turnAroundHours);
+	Date dueDate = callAndConvertToUtilDate(submitCalendar, turnAroundHours);
 
 	Calendar calendar = new GregorianCalendar(2016, 8, 19, 10, 0); // 2016-09-19 10AM
 	calendar.setTime(dueDate);
@@ -88,7 +96,7 @@ public class DueDateCalculatorTest {
 
 	int turnAroundHours = 4;
 
-	Date dueDate = dueDateCalculator.calculateDueDate(submitCalendar.getTime(), turnAroundHours);
+	Date dueDate = callAndConvertToUtilDate(submitCalendar, turnAroundHours);
 
 	Calendar calendar = new GregorianCalendar(2016, 0, 1, 10, 0); // 2016-01-01 10AM
 	calendar.setTime(dueDate);
@@ -99,26 +107,26 @@ public class DueDateCalculatorTest {
     public void testCaculateDueDateValidateSubmitHours() {
 	Calendar submitCalendar = Calendar.getInstance();
 	submitCalendar.set(Calendar.HOUR_OF_DAY, 0); //midnight
-	dueDateCalculator.calculateDueDate(submitCalendar.getTime(), 1);
+	callAndConvertToUtilDate(submitCalendar, 1);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testCaculateDueDateValidateTurnAroundHours() {
 	Calendar submitCalendar = new GregorianCalendar(2016, 8, 7, 14, 0); // 2016-09-07 12PM
-	dueDateCalculator.calculateDueDate(submitCalendar.getTime(), 0);
+	callAndConvertToUtilDate(submitCalendar, 0);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testCaculateDueDateValidateTurnAroundHours2() {
 	Calendar submitCalendar = new GregorianCalendar(2016, 8, 7, 14, 0); // 2016-09-07 12PM
-	dueDateCalculator.calculateDueDate(submitCalendar.getTime(), -1);
+	callAndConvertToUtilDate(submitCalendar, -1);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testCaculateDueDateValidateSubmitWeekdays() {
 	Calendar submitCalendar = Calendar.getInstance();
 	submitCalendar.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
-	dueDateCalculator.calculateDueDate(submitCalendar.getTime(), 1);
+	callAndConvertToUtilDate(submitCalendar, 1);
     }
 
 }

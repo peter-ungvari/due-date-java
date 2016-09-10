@@ -1,65 +1,68 @@
 package org.example.duedate;
 
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAdjusters;
+import java.util.EnumSet;
 
 public class DueDateCalculator {
 
     private static final int FIVE_PM = 17;
     private static final int NINE_AM = 9;
 
-    public Date calculateDueDate(Date submitDate, int turnAroundHours) {
-	Calendar calendar = Calendar.getInstance();
-	calendar.setTime(submitDate);
+    public LocalDateTime calculateDueDate(LocalDateTime submitDate, Duration turnAround) {
 
-	validateSubmitDate(calendar);
-	validateTurnAroundHours(turnAroundHours);
+	validateSubmitDate(submitDate);
+	validateTurnAround(turnAround);
 
-	for (int i = 0; i < turnAroundHours; ++i) {
-	    nextWorkHour(calendar);
+	LocalDateTime dueDate = submitDate;
+	for (int i = 0; i < turnAround.toHours(); ++i) {
+	    dueDate = nextWorkHour(submitDate);
 	}
 
-	return calendar.getTime();
+	return dueDate;
     }
 
-    private void nextWorkHour(Calendar calendar) {
-	if (16 == calendar.get(Calendar.HOUR_OF_DAY)) {
-	    nextWeekDay(calendar);
-	    calendar.set(Calendar.HOUR_OF_DAY, 9);
+    private LocalDateTime nextWorkHour(LocalDateTime dateTime) {
+	LocalDateTime updatedDateTime;
+	if (16 == dateTime.get(ChronoField.HOUR_OF_DAY)) {
+	    updatedDateTime = nextWeekDay(dateTime);
+	    updatedDateTime = updatedDateTime.withHour(NINE_AM);
 	} else {
-	    calendar.add(Calendar.HOUR_OF_DAY, 1);
+	    updatedDateTime = dateTime.plusHours(1L);
 	}
+	return updatedDateTime;
     }
 
-    private void nextWeekDay(Calendar calendar) {
-	if (Calendar.FRIDAY == calendar.get(Calendar.DAY_OF_WEEK)) {
-	    calendar.add(Calendar.DATE, 3); // MONDAY
+    private LocalDateTime nextWeekDay(LocalDateTime dateTime) {
+	if (DayOfWeek.FRIDAY == dateTime.getDayOfWeek()) {
+	    return dateTime.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
 	} else {
-	    calendar.add(Calendar.DATE, 1); // NEXT calendar day
+	    return dateTime.plusDays(1L);
 	}
     }
 
-    private void validateSubmitDate(Calendar calendar) {
-	List<Integer> weekends = Arrays.asList(Calendar.SUNDAY, Calendar.SATURDAY);
+    private void validateSubmitDate(LocalDateTime dateTime) {
+	EnumSet<DayOfWeek> weekends = EnumSet.of(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
 
-	if (weekends.contains(calendar.get(Calendar.DAY_OF_WEEK))) {
+	if (weekends.contains(dateTime.getDayOfWeek())) {
 	    throw new IllegalArgumentException("Submit date is not a weekday. Only weekdays accepted");
 	}
 
-	if (calendar.get(Calendar.HOUR_OF_DAY) < NINE_AM) {
+	if (dateTime.getHour() < NINE_AM) {
 	    throw new IllegalArgumentException("Submit time is before 9AM. It should be between 9AM and 5PM");
 	}
 
-	if (calendar.get(Calendar.HOUR_OF_DAY) > FIVE_PM) {
+	if (dateTime.getHour() > FIVE_PM) {
 	    throw new IllegalArgumentException("Submit time is after 5PM. It should be between 9AM and 5PM");
 	}
     }
 
-    private void validateTurnAroundHours(int turnAroundHours) {
-	if (turnAroundHours <= 0) {
-	    throw new IllegalArgumentException("turnAroundHours should be a positive integer");
+    private void validateTurnAround(Duration turnAround) {
+	if (turnAround.isZero() || turnAround.isNegative()) {
+	    throw new IllegalArgumentException("turnAround should be a positive");
 	}
     }
 
